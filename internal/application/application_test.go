@@ -71,6 +71,12 @@ func TestRequestHandler(t *testing.T) {
 			expectedBody:     []byte(`{"result": "8.000000"}`),
 			expectedRespCode: 200,
 		},
+		{name: "valid complex3",
+			path:             "/api/v1/calculate",
+			sendBody:         `{"expression": "(42+8)*243+123+0.678"}`,
+			expectedBody:     []byte(`{"result": "12273.678"}`),
+			expectedRespCode: 200,
+		},
 	}
 	for _, testCase := range testCasesSuccess {
 		t.Run(testCase.name, func(t *testing.T) {

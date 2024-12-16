@@ -1,136 +1,157 @@
 package calculation
 
 import (
+	"errors"
 	"strconv"
-	"strings"
+	"unicode"
 )
 
-func stringToFloat64(str string) float64 {
-	degree := float64(1)
-	var res float64 = 0
-	var invers bool = false
-	for i := len(str); i > 0; i-- {
-		if str[i-1] == '-' {
-			invers = true
-		} else {
-			res += float64(9-int('9'-str[i-1])) * degree
-			degree *= 10
+type MathOp struct{}
+
+func (s *MathOp) operate(b float64, operator rune, a float64) (float64, error) {
+	switch operator {
+	case '+':
+		return a + b, nil
+	case '-':
+		return a - b, nil
+	case '*':
+		return a * b, nil
+	case '/':
+		if b == 0 {
+			return 0.0, errors.New("Division by zero")
 		}
+		return a / b, nil
+	default:
+		return 0, nil
 	}
-	if invers {
-		res = 0 - res
-	}
-	return res
 }
 
-func isSign(value rune) bool {
-	return value == '+' || value == '-' || value == '*' || value == '/'
+func (s *MathOp) calculate(expression string) (float64, error) {
+	operatorPrecedence := map[rune]int{
+		'+': 1,
+		'-': 1,
+		'*': 2,
+		'/': 2,
+		'(': 0,
+		')': 0,
+	}
+
+	operatorStack := []rune{}
+	operandStack := []float64{}
+	stringLength := len(expression)
+	i := 0
+
+	// Obhod string
+	for i < stringLength {
+		char := rune(expression[i])
+		if char == ' ' {
+			i++
+			continue
+		}
+		if unicode.IsDigit(char) || char == '.' {
+			curDigiteStr := ""
+			isDot := false
+
+			for i < stringLength && (unicode.IsDigit(rune(expression[i])) || rune(expression[i]) == '.') {
+				isDot = expression[i] == '.'
+				curDigiteStr += string(expression[i])
+				i++
+			}
+			if !isDot {
+				curDigiteStr += ".0"
+			}
+			realNum, _ := strconv.ParseFloat(curDigiteStr, 64)
+			isDot = false
+			operandStack = append(operandStack, realNum)
+			continue
+		}
+
+		if len(operatorStack) == 0 || char == '(' || operatorPrecedence[char] > operatorPrecedence[operatorStack[len(operatorStack)-1]] {
+			if len(operandStack) == 0 && (char == '-' || char == '+') {
+				operandStack = append(operandStack, 0)
+			}
+			operatorStack = append(operatorStack, char)
+			if char == '(' {
+				j := i
+				for j+1 < stringLength {
+
+					if expression[j+1] == '-' || expression[j+1] == '+' {
+						operandStack = append(operandStack, 0)
+					}
+					if expression[j+1] != ' ' {
+						break
+					}
+					j++
+				}
+			}
+		} else if char == ')' {
+			op := operatorStack[len(operatorStack)-1]
+			operatorStack = operatorStack[:len(operatorStack)-1]
+			for op != '(' {
+				a := operandStack[len(operandStack)-1]
+				operandStack = operandStack[:len(operandStack)-1]
+				b := operandStack[len(operandStack)-1]
+				operandStack = operandStack[:len(operandStack)-1]
+				tmp, err := s.operate(a, op, b)
+				if err != nil {
+					return 0, err
+				}
+				operandStack = append(operandStack, tmp)
+				op = operatorStack[len(operatorStack)-1]
+				operatorStack = operatorStack[:len(operatorStack)-1]
+			}
+		} else if operatorPrecedence[char] <= operatorPrecedence[operatorStack[len(operatorStack)-1]] {
+
+			op := operatorStack[len(operatorStack)-1]
+			for len(operatorStack) > 0 && operatorPrecedence[char] <= operatorPrecedence[operatorStack[len(operatorStack)-1]] && op != '(' {
+				operatorStack = operatorStack[:len(operatorStack)-1]
+				a := operandStack[len(operandStack)-1]
+				operandStack = operandStack[:len(operandStack)-1]
+				b := operandStack[len(operandStack)-1]
+				operandStack = operandStack[:len(operandStack)-1]
+				tmp, err := s.operate(a, op, b)
+				if err != nil {
+					return 0, err
+				}
+				operandStack = append(operandStack, tmp)
+				if len(operatorStack) > 0 {
+					op = operatorStack[len(operatorStack)-1]
+				} else {
+					break
+				}
+			}
+			operatorStack = append(operatorStack, char)
+		}
+		i++
+	}
+
+	for len(operatorStack) > 0 {
+		lenOperandStack := len(operandStack)
+		if len(operandStack) <= 1 {
+			return 0, errors.New("Not valid string")
+		}
+		op := operatorStack[len(operatorStack)-1]
+		operatorStack = operatorStack[:len(operatorStack)-1]
+		a := operandStack[lenOperandStack-1]
+		operandStack = operandStack[:len(operandStack)-1]
+		b := operandStack[len(operandStack)-1]
+		operandStack = operandStack[:len(operandStack)-1]
+		tmp, err := s.operate(a, op, b)
+		if err != nil {
+			return 0, err
+		}
+		operandStack = append(operandStack, tmp)
+	}
+
+	return operandStack[len(operandStack)-1], nil
 }
 
 func Calc(expression string) (float64, error) {
-	if len(expression) < 3 {
-		return 0, ErrInvalidExpression
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	var res float64
-	var b string
-	var c rune = 0
-	var resflag bool = false
-	var isc int
-	var countc int = 0
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	for _, value := range expression {
-		if isSign(value) {
-			countc++
-		}
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	if isSign(rune(expression[0])) || isSign(rune(expression[len(expression)-1])) {
-		return 0, ErrInvalidExpression
-	}
-	for i, value := range expression {
-		if value == '(' {
-			isc = i
-		}
-		if value == ')' {
-			calc, err := Calc(expression[isc+1 : i])
-			if err != nil {
-				return 0, ErrInvalidExpression
-			}
-			calcstr := strconv.FormatFloat(calc, 'f', 0, 64)
-			i2 := i
-			i -= len(expression[isc:i+1]) - len(calcstr)
-			expression = strings.Replace(expression, expression[isc:i2+1], calcstr, 1) // Меняем скобки на результат выражения в них
-		}
-	}
-	if countc > 1 {
-		for i := 1; i < len(expression); i++ {
-			value := rune(expression[i])
-			///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			//Умножение и деление
-			if value == '*' || value == '/' {
-				var imin int = i - 1
-				if imin != 0 {
-					for !isSign(rune(expression[imin])) && imin > 0 {
-						imin--
-					}
-					imin++
-				}
-				var imax int = i + 1
-				if imax == len(expression) {
-					imax--
-				} else {
-					for !isSign(rune(expression[imax])) && imax < len(expression)-1 {
-						imax++
-					}
-				}
-				if imax == len(expression)-1 {
-					imax++
-				}
-				calc, err := Calc(expression[imin:imax])
-				if err != nil {
-					return 0, ErrInvalidExpression
-				}
-				calcstr := strconv.FormatFloat(calc, 'f', 0, 64)
-				i -= len(expression[isc:i+1]) - len(calcstr) - 1
-				expression = strings.Replace(expression, expression[imin:imax], calcstr, 1) // Меняем скобки на результат выражения в них
-			}
-			if value == '+' || value == '-' || value == '*' || value == '/' {
-				c = value
-			}
-		}
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
-	for _, value := range expression + "s" {
-		switch {
-		case value == ' ':
-			continue
-		case value > 47 && value < 58: // Если это цифра
-			b += string(value)
-		case isSign(value) || value == 's': // Если это знак
-			if resflag {
-				switch c {
-				case '+':
-					res += stringToFloat64(b)
-				case '-':
-					res -= stringToFloat64(b)
-				case '*':
-					res *= stringToFloat64(b)
-				case '/':
-					res /= stringToFloat64(b)
-				}
-			} else {
-				resflag = true
-				res = stringToFloat64(b)
-			}
-			b = strings.ReplaceAll(b, b, "")
-			c = value
+	if len(expression)%2 == 0 {
+		return 0, errors.New("not valid")
 
-			/////////////////////////////////////////////////////////////////////////////////////////////
-		case value == 's':
-		default:
-			return 0, ErrInvalidExpression
-		}
 	}
-	return res, nil
+	mathOp := MathOp{}
+	result, err := mathOp.calculate(expression)
+	return result, err
 }
