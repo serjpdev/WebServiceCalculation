@@ -41,6 +41,7 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Info("Parse from http request", "expression", request.Expression)
 	result, err := calculation.Calc(request.Expression)
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		slog.Error(err.Error(), "calculation.Calc(request.Expression), it is ", request.Expression)
 		if errors.Is(err, calculation.ErrInvalidExpression) {
@@ -51,6 +52,6 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		slog.Info("Result is", request.Expression, result)
-		fmt.Fprintf(w, "result: %f", result)
+		fmt.Fprintf(w, `{"result": "%f"}`, result)
 	}
 }

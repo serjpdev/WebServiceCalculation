@@ -3,7 +3,6 @@ package application_test
 import (
 	"bytes"
 	"github.com/poserj/calc_project/internal/application"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -42,10 +41,34 @@ func TestRequestHandler(t *testing.T) {
 			expectedBody:     []byte(`{"error": "Expression is not valid"}`),
 			expectedRespCode: 422,
 		},
-		{name: "valid simple",
+		{name: "not valid request wrong bracket)",
+			path:             "/api/v1/calculate",
+			sendBody:         `{"expression": "1+1-4+(1/1("}`,
+			expectedBody:     []byte(`{"error": "Expression is not valid"}`),
+			expectedRespCode: 422,
+		},
+		{name: "valid simple1",
 			path:             "/api/v1/calculate",
 			sendBody:         `{"expression": "1+1"}`,
 			expectedBody:     []byte(`{"result": "2.000000"}`),
+			expectedRespCode: 200,
+		},
+		{name: "valid simple2",
+			path:             "/api/v1/calculate",
+			sendBody:         `{"expression": "1 / 2"}`,
+			expectedBody:     []byte(`{"result": "0.500000"}`),
+			expectedRespCode: 200,
+		},
+		{name: "valid complex",
+			path:             "/api/v1/calculate",
+			sendBody:         `{"expression": "2+2*2"}`,
+			expectedBody:     []byte(`{"result": "6.000000"}`),
+			expectedRespCode: 200,
+		},
+		{name: "valid complex2",
+			path:             "/api/v1/calculate",
+			sendBody:         `{"expression": "(2+2)*2"}`,
+			expectedBody:     []byte(`{"result": "8.000000"}`),
 			expectedRespCode: 200,
 		},
 	}
@@ -57,16 +80,13 @@ func TestRequestHandler(t *testing.T) {
 			application.CalcHandler(w, req)
 			res := w.Result()
 			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			if err != nil {
-				t.Errorf("Error: %v", err)
-			}
-			strData := strings.TrimSpace(string(data))
+
 			if res.StatusCode != testCase.expectedRespCode {
 				t.Errorf("Expected %d, but got %d", testCase.expectedRespCode, res.StatusCode)
 			}
-			if bytes.Equal(w.Body.Bytes(), testCase.expectedBody) {
-				t.Errorf("Expected %s but got %v", testCase.expectedBody, strData)
+			clearOutput := bytes.Trim(w.Body.Bytes(), " \n\t")
+			if !bytes.Equal(clearOutput, testCase.expectedBody) {
+				t.Errorf("Expected %s but got %s", testCase.expectedBody, clearOutput)
 			}
 
 		})
