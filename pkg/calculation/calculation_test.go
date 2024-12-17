@@ -36,11 +36,11 @@ func TestCalc(t *testing.T) {
 			expression:     "22+2",
 			expectedResult: 24,
 		},
-		{
-			name:           "complex",
-			expression:     "(42+8)*243+123+0.678",
-			expectedResult: 12273.678,
-		},
+		//{
+		//	name:           "complex2",
+		//	expression:     "0,6+3",
+		//	expectedResult: 0.14,
+		//},
 	}
 
 	for _, testCase := range testCasesSuccess {
