@@ -2,7 +2,6 @@ package application
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/poserj/calc_project/pkg/calculation"
 	"io"
@@ -21,7 +20,8 @@ func PanicMiddleware(next http.Handler) http.Handler {
 				bytedata, _ := io.ReadAll(r.Body)
 				reqBodyString := string(bytedata)
 				slog.Error("start", "method", r.Method, "path", r.URL.Path, "body", reqBodyString)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusNotFound)
+				http.Error(w, ErrUnknownErrorStr, http.StatusInternalServerError)
+
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -29,9 +29,14 @@ func PanicMiddleware(next http.Handler) http.Handler {
 }
 
 func CalcHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, ErrInvalidQueryStr, http.StatusUnprocessableEntity)
+		return
+	}
 	request := new(Request)
 	defer r.Body.Close()
 	err := json.NewDecoder(r.Body).Decode(&request)
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		byteData, _ := io.ReadAll(r.Body)
 		reqBodyString := string(byteData)
@@ -41,14 +46,10 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Info("Parse from http request", "expression", request.Expression)
 	result, err := calculation.Calc(request.Expression)
-	w.Header().Set("Content-Type", "application/json")
+
 	if err != nil {
 		slog.Error(err.Error(), "calculation.Calc(request.Expression), it is ", request.Expression)
-		if errors.Is(err, calculation.ErrInvalidExpression) {
-			http.Error(w, ErrInvalidQueryStr, http.StatusUnprocessableEntity)
-		} else {
-			http.Error(w, ErrUnknownErrorStr, http.StatusInternalServerError)
-		}
+		http.Error(w, ErrInvalidQueryStr, http.StatusUnprocessableEntity)
 
 	} else {
 		slog.Info("Result is", request.Expression, result)

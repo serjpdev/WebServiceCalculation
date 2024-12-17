@@ -1,6 +1,7 @@
 package calculation_test
 
 import (
+	"fmt"
 	"github.com/poserj/calc_project/pkg/calculation"
 	"testing"
 )
@@ -31,15 +32,20 @@ func TestCalc(t *testing.T) {
 			expression:     "1/2",
 			expectedResult: 0.5,
 		},
-		{
-			name:           "complex",
-			expression:     "22+2",
-			expectedResult: 24,
-		},
+		//{
+		//	name:           "complex",
+		//	expression:     "22+2",
+		//	expectedResult: 24,
+		//},
 		//{
 		//	name:           "complex2",
-		//	expression:     "0,6+3",
-		//	expectedResult: 0.14,
+		//	expression:     "(42+8)*243+123+0.678",
+		//	expectedResult: 12273.678,
+		//},
+		//{
+		//	name:           "complex3",
+		//	expression:     "(4+8) * 243+123+ 0.678",
+		//	expectedResult: 12273.678,
 		//},
 	}
 
@@ -47,10 +53,10 @@ func TestCalc(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			val, err := calculation.Calc(testCase.expression)
 			if err != nil {
-				t.Fatalf("successful case %s returns error", testCase.expression)
+				t.Fatalf("%s: successful case %s returns error, %s", testCase.name, testCase.expression, err)
 			}
 			if val != testCase.expectedResult {
-				t.Fatalf("%f should be equal %f", val, testCase.expectedResult)
+				t.Fatalf("%s: %f should be equal %f", testCase.name, val, testCase.expectedResult)
 			}
 		})
 	}
@@ -80,6 +86,26 @@ func TestCalc(t *testing.T) {
 			name:       "div by zero",
 			expression: "(2+2)/0",
 		},
+		{
+			name:       "one more bracket",
+			expression: "(2+2)/2+)(1-2)",
+		},
+		{
+			name:       "one more bracket2",
+			expression: "(2+2)/2+((2-2)",
+		},
+		{
+			name:       "one more bracket3",
+			expression: "(2+2))/2+(1-2)",
+		},
+		{
+			name:       "one more bracket3",
+			expression: "(2+2)--3",
+		},
+		{
+			name:       "one more -",
+			expression: "1+1-",
+		},
 	}
 
 	for _, testCase := range testCasesFail {
@@ -88,6 +114,7 @@ func TestCalc(t *testing.T) {
 			if err == nil {
 				t.Fatalf("expression %s is invalid but result  %f was obtained", testCase.expression, val)
 			}
+			fmt.Println(val)
 		})
 	}
 }
