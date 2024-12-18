@@ -2,169 +2,264 @@ package calculation
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
-	"strings"
-	"unicode"
 )
 
-func SpaceStringsBuilder(str string) string {
-	var b strings.Builder
-	b.Grow(len(str))
-	for _, ch := range str {
-		if !unicode.IsSpace(ch) {
-			b.WriteRune(ch)
-		}
-	}
-	return b.String()
-}
-
-type MathOp struct{}
-
-func (s *MathOp) operate(b float64, operator rune, a float64) (float64, error) {
-	switch operator {
-	case '+':
-		return a + b, nil
-	case '-':
-		return a - b, nil
-	case '*':
-		return a * b, nil
-	case '/':
-		if b == 0 {
-			return 0.0, errors.New("Division by zero")
-		}
-		return a / b, nil
+func checkOperation(symbol string) bool {
+	switch symbol {
+	case "+":
+		return true
+	case "-":
+		return true
+	case "*":
+		return true
+	case "/":
+		return true
 	default:
-		return 0, nil
+		return false
 	}
 }
 
-func (s *MathOp) calculate(expression string) (float64, error) {
-	operatorPrecedence := map[rune]int{
-		'+': 1,
-		'-': 1,
-		'*': 2,
-		'/': 2,
-		'(': 0,
-		')': 0,
+func getWeightOp(operator string) int {
+	switch operator {
+	case "(":
+		return 0
+	case ")":
+		return 1
+	case "+":
+		return 2
+	case "-":
+		return 2
+	case "*":
+		return 3
+	case "/":
+		return 3
+	default:
+		return -1
+	}
+}
+
+func calculateInfix(operator string, operand1, operand2 float64) float64 {
+	switch operator {
+	case "+":
+		return operand1 + operand2
+	case "-":
+		return operand1 - operand2
+	case "*":
+		return operand1 * operand2
+	case "/":
+		return operand1 / operand2
+	default:
+		return 0
+	}
+}
+
+func getNumberFromString(expression string, pos *int) string {
+	var output string
+
+	for ; *pos < len(expression); *pos++ {
+		symbol := string((expression)[*pos])
+		_, err := strconv.Atoi(symbol)
+
+		if err == nil || symbol == "." {
+
+			output += symbol
+		} else {
+
+			*pos--
+			break
+		}
 	}
 
-	operatorStack := []rune{}
-	operandStack := []float64{}
-	stringLength := len(expression)
-	i := 0
+	return output
+}
 
-	// Obhod string
-	for i < stringLength {
-		char := rune(expression[i])
-		if char == ' ' {
-			i++
-			continue
-		}
-		if unicode.IsDigit(char) || char == '.' {
-			curDigiteStr := ""
-			isDot := false
+func convertInfixToPostfix(infixExpression string) (string, error) {
+	var postfixExpression string // Выходная строка
+	var operationsStack []string // Стек операторов (так-то массив, но будет вести себя как стек)
 
-			for i < stringLength && (unicode.IsDigit(rune(expression[i])) || rune(expression[i]) == '.') {
-				isDot = expression[i] == '.'
-				curDigiteStr += string(expression[i])
-				i++
-			}
-			if !isDot {
-				curDigiteStr += ".0"
-			}
-			realNum, _ := strconv.ParseFloat(curDigiteStr, 64)
-			isDot = false
-			operandStack = append(operandStack, realNum)
-			continue
-		}
+	if _, err := validateInfix(infixExpression); err != nil {
 
-		if len(operatorStack) == 0 || char == '(' || operatorPrecedence[char] > operatorPrecedence[operatorStack[len(operatorStack)-1]] {
-			if len(operandStack) == 0 && (char == '-' || char == '+') {
-				operandStack = append(operandStack, 0)
-			}
-			operatorStack = append(operatorStack, char)
-			if char == '(' {
-				j := i
-				for j+1 < stringLength {
+		return postfixExpression, err
+	}
 
-					if expression[j+1] == '-' || expression[j+1] == '+' {
-						operandStack = append(operandStack, 0)
-					}
-					if expression[j+1] != ' ' {
+	for i := 0; i < len(infixExpression); i++ {
+		symbol := string((infixExpression)[i])
+
+		if _, err := strconv.Atoi(symbol); err == nil || symbol == "." {
+
+			postfixExpression += getNumberFromString(infixExpression, &i) + " "
+		} else if checkOperation(symbol) {
+
+			if len(operationsStack) == 0 ||
+				getWeightOp(operationsStack[len(operationsStack)-1]) < getWeightOp(symbol) {
+
+				operationsStack = append(operationsStack, symbol)
+			} else {
+
+				for len(operationsStack) > 0 {
+					if getWeightOp(operationsStack[len(operationsStack)-1]) < getWeightOp(symbol) {
+
 						break
 					}
-					j++
-				}
-			}
-		} else if char == ')' {
-			op := operatorStack[len(operatorStack)-1]
-			operatorStack = operatorStack[:len(operatorStack)-1]
-			for op != '(' {
-				a := operandStack[len(operandStack)-1]
-				operandStack = operandStack[:len(operandStack)-1]
-				b := operandStack[len(operandStack)-1]
-				operandStack = operandStack[:len(operandStack)-1]
-				tmp, err := s.operate(a, op, b)
-				if err != nil {
-					return 0, err
-				}
-				operandStack = append(operandStack, tmp)
-				op = operatorStack[len(operatorStack)-1]
-				operatorStack = operatorStack[:len(operatorStack)-1]
-			}
-		} else if operatorPrecedence[char] <= operatorPrecedence[operatorStack[len(operatorStack)-1]] {
 
-			op := operatorStack[len(operatorStack)-1]
-			for len(operatorStack) > 0 && operatorPrecedence[char] <= operatorPrecedence[operatorStack[len(operatorStack)-1]] && op != '(' {
-				operatorStack = operatorStack[:len(operatorStack)-1]
-				a := operandStack[len(operandStack)-1]
-				operandStack = operandStack[:len(operandStack)-1]
-				b := operandStack[len(operandStack)-1]
-				operandStack = operandStack[:len(operandStack)-1]
-				tmp, err := s.operate(a, op, b)
-				if err != nil {
-					return 0, err
+					postfixExpression += operationsStack[len(operationsStack)-1] + " "
+
+					operationsStack = operationsStack[:len(operationsStack)-1]
 				}
-				operandStack = append(operandStack, tmp)
-				if len(operatorStack) > 0 {
-					op = operatorStack[len(operatorStack)-1]
-				} else {
+
+				if len(operationsStack) == 0 ||
+					getWeightOp(operationsStack[len(operationsStack)-1]) < getWeightOp(symbol) {
+					operationsStack = append(operationsStack, symbol)
+				}
+			}
+		} else if symbol == "(" {
+
+			operationsStack = append(operationsStack, symbol)
+		} else if symbol == ")" {
+
+			for len(operationsStack) > 0 {
+				if operationsStack[len(operationsStack)-1] == "(" {
+
 					break
 				}
+
+				postfixExpression += operationsStack[len(operationsStack)-1] + " "
+
+				operationsStack = operationsStack[:len(operationsStack)-1]
 			}
-			operatorStack = append(operatorStack, char)
+
+			operationsStack = operationsStack[:len(operationsStack)-1]
+
 		}
-		i++
 	}
 
-	for len(operatorStack) > 0 {
-		lenOperandStack := len(operandStack)
-		if len(operandStack) <= 1 {
-			return 0, errors.New("Not valid string")
-		}
-		op := operatorStack[len(operatorStack)-1]
-		operatorStack = operatorStack[:len(operatorStack)-1]
-		a := operandStack[lenOperandStack-1]
-		operandStack = operandStack[:len(operandStack)-1]
-		b := operandStack[len(operandStack)-1]
-		operandStack = operandStack[:len(operandStack)-1]
-		tmp, err := s.operate(a, op, b)
-		if err != nil {
-			return 0, err
-		}
-		operandStack = append(operandStack, tmp)
+	for len(operationsStack) > 0 {
+		postfixExpression += operationsStack[len(operationsStack)-1] + " "
+		operationsStack = operationsStack[:len(operationsStack)-1]
 	}
 
-	return operandStack[len(operandStack)-1], nil
+	return postfixExpression, nil
+}
+
+func checkParentheses(expression string) bool {
+	var parenthesesStack []string
+
+	for i := 0; i < len(expression); i++ {
+		symbol := string((expression)[i])
+
+		if symbol == "(" {
+			parenthesesStack = append(parenthesesStack, symbol)
+			continue
+		}
+		if symbol != ")" {
+			continue
+		}
+
+		if len(parenthesesStack) == 0 {
+
+			return false
+		}
+
+		parenthesesStack = parenthesesStack[:len(parenthesesStack)-1]
+	}
+
+	return len(parenthesesStack) == 0
+}
+
+func checkBinaryOperations(expression string) bool {
+	operandsCount, operatorsCount := 0, 0
+
+	for i := 0; i < len(expression); i++ {
+		symbol := string((expression)[i])
+		_, err := strconv.Atoi(symbol)
+
+		if err == nil || symbol == "." {
+			getNumberFromString(expression, &i)
+			operandsCount++
+		} else if checkOperation(symbol) {
+			operatorsCount++
+		}
+	}
+
+	return operandsCount-operatorsCount == 1
+}
+
+func checkSymbols(expression string) bool {
+	// spaces should be in start of pattern
+	pattern := `^[0-9\.\+\-\*\/()\s]+$`
+	return regexp.MustCompile(pattern).MatchString(expression)
+}
+
+func validateInfix(expression string) (bool, error) {
+	// validation infix expression
+	if len(expression) == 0 {
+
+		return false, errors.New("expression is empty")
+	}
+	if !checkSymbols(expression) {
+
+		return false, errors.New("expression contains invalid characters")
+	}
+	if !checkParentheses(expression) {
+
+		return false, errors.New("parentheses is not valid")
+	}
+	if !checkBinaryOperations(expression) {
+		return false, errors.New("binary operations is not valid")
+	}
+
+	return true, nil
 }
 
 func Calc(expression string) (float64, error) {
-	exprClear := SpaceStringsBuilder(expression)
-	if len(exprClear)%2 == 0 {
-		return 0, errors.New("not valid")
+	postfixExpression, err := convertInfixToPostfix(expression)
 
+	if err != nil {
+		return 0, err
 	}
-	mathOp := MathOp{}
-	result, err := mathOp.calculate(exprClear)
-	return result, err
+	// stack of  operands
+	var operandsStack []float64
+
+	// read postfix entry by symbol
+	for i := 0; i < len(postfixExpression); i++ {
+		symbol := string(postfixExpression[i])
+
+		if _, err := strconv.Atoi(symbol); err == nil || symbol == "." {
+			// check if symbol is digit or dot,
+			// add to stack
+
+			operand, err := strconv.ParseFloat(getNumberFromString(postfixExpression, &i), 64)
+			if err != nil {
+				return 0, err
+			}
+
+			operandsStack = append(operandsStack, operand)
+		} else if checkOperation(symbol) {
+			// if symbol is operator
+
+			var operand1, operand2 float64
+
+			// pop 2 last element
+			if len(operandsStack) > 0 {
+				operand2 = operandsStack[len(operandsStack)-1]
+				operandsStack = operandsStack[:len(operandsStack)-1]
+			}
+			if len(operandsStack) > 0 {
+				operand1 = operandsStack[len(operandsStack)-1]
+				operandsStack = operandsStack[:len(operandsStack)-1]
+			}
+
+			if symbol == "/" && operand2 == 0.0 {
+				return 0, errors.New("division by zero")
+			}
+
+			// add to operand stack
+			operandsStack = append(operandsStack, calculateInfix(symbol, operand1, operand2))
+		}
+	}
+
+	// Last value in stack
+	return operandsStack[len(operandsStack)-1], nil
 }

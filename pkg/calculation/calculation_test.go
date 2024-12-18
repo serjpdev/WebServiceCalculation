@@ -1,7 +1,6 @@
 package calculation_test
 
 import (
-	"fmt"
 	"github.com/poserj/calc_project/pkg/calculation"
 	"testing"
 )
@@ -114,7 +113,6 @@ func TestCalc(t *testing.T) {
 			if err == nil {
 				t.Fatalf("expression %s is invalid but result  %f was obtained", testCase.expression, val)
 			}
-			fmt.Println(val)
 		})
 	}
 }

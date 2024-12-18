@@ -30,6 +30,11 @@
     }
 
 
+## Разрешённые символы
+- Знаки операций (только бинарные): `+`, `-`, `*`, `/`
+- Знаки приоритизации: `(`, `)`
+- Рациональные числа (целые, либо через `.`)
+
 ## Manual Tests:
 1. Send data: curl --location 'localhost/api/v1/calculate' \
    --header 'Content-Type: application/json' \
