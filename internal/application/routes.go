@@ -28,15 +28,24 @@ func PanicMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func NotFoundReturn422(w http.ResponseWriter, request *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	slog.Error("No valid endpoint", "method", request.Method, "path", request.URL.Path)
+	http.Error(w, ErrInvalidQueryStr, http.StatusUnprocessableEntity)
+	return
+}
+
 func CalcHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
+		slog.Error("Not allowed", "method", r.Method, "path", r.URL.Path)
 		http.Error(w, ErrInvalidQueryStr, http.StatusUnprocessableEntity)
 		return
 	}
 	request := new(Request)
 	defer r.Body.Close()
 	err := json.NewDecoder(r.Body).Decode(&request)
-	w.Header().Set("Content-Type", "application/json")
+
 	if err != nil {
 		byteData, _ := io.ReadAll(r.Body)
 		reqBodyString := string(byteData)
@@ -48,7 +57,7 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := calculation.Calc(request.Expression)
 
 	if err != nil {
-		slog.Error(err.Error(), "calculation.Calc(request.Expression), it is ", request.Expression)
+		slog.Error(err.Error(), "it is ", request.Expression)
 		http.Error(w, ErrInvalidQueryStr, http.StatusUnprocessableEntity)
 
 	} else {

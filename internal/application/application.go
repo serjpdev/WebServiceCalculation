@@ -35,6 +35,7 @@ func (a *Application) RunServer() error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/v1/calculate", logsystem.LogRequestfunc(CalcHandler))
+	mux.HandleFunc("/", NotFoundReturn422)
 	panicHandler := PanicMiddleware(mux)
 	err := http.ListenAndServe(":"+a.config.Addr, panicHandler)
 
