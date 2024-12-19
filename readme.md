@@ -4,7 +4,8 @@
 При этом результат выражения сервис отправляет также в формате JSON.
 
 ## Запуск
-```
+```bash
+1. Установка GO 1.23
 1. Клонирование репозитория:
    git clone github
 2. Переход в директорию проекта
@@ -12,10 +13,9 @@
 3. Запуск ПО
    go run ./cmd/main.go
 ```
-
 ## Работа с ПО
 ### У сервиса 1 endpoint с url-ом /api/v1/calculate. Пользователь отправляет на этот url POST-запрос:
-   ```
+   ```bash
    curl --location 'localhost:8080/api/v1/calculate' \
    --header 'Content-Type: application/json' \
    --data '{"expression": "1+1"}'
@@ -25,6 +25,7 @@
 - Знаки операций (только бинарные): `+`, `-`, `*`, `/`
 - Знаки приоритизации: `(`, `)`
 - Рациональные числа (целые, либо через `.`)
+### Ответы сервера 
    1. При валидном запросе сервер отвечает с кодом 200 и ответом:
 ```
      {"result": "результат выражения"}
@@ -37,28 +38,40 @@
 ```
       {"error": "Internal server error"}
 ```
-1. {"expression": "выражение, которое ввёл пользователь"}
-   ```
-   curl --location 'localhost:8080/api/v1/calculate' \
-   --header 'Content-Type: application/json' \
-   --data '{"expression": "1+1"}'
-   ``
 ## Логирование данных 
-Организован 
-
+Организовано логирование.
 
 ## Автоматические тесты (запуск из директории проекта)
-```
+```bash
 go test ./... 
 ```
 
-## Manual Tests for Linux curl:
-1. Send data: 
-```
+## Ручное тестирование Linux curl:
+1. Отправка валидных данных: 
+```bash
 curl --location 'localhost:8080/api/v1/calculate' \
    --header 'Content-Type: application/json' \
    --data '{
    "expression": "2+2*2"
    }
 ```
-2. 
+2. Отправка невалидных данных:
+```bash
+curl --location 'localhost:8080/api/v1/calculate' \
+   --header 'Content-Type: application/json' \
+   --data '{
+   "expression": "2+2*2)"
+   }
+```
+3. Отправка невалидного метода HTTP:
+```bash
+curl --location --request GET 'localhost:8080/api/v1/calculate' \
+--header 'Content-Type: application/json' \
+--data '{"expression": "1+1"}'
+```
+4. Отправка на невалидный endpoint:
+```bash
+curl --location 'localhost:8080/api/v1/' \
+--header 'Content-Type: application/json' \
+--data '{"expression": "1+1"}'
+```
