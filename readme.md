@@ -4,24 +4,32 @@
 При этом результат выражения сервис отправляет также в формате JSON.
 
 ## Запуск
-```bash
+
 1. Установить GO 1.23
-2. Клонирование репозитория:
+2. Клонировать репозиторий:
+```bash
    git clone https://github.com/serjpdev/WebServiceCalculation.git
+```
 3. Переход в директорию проекта
-   cd ./calc_project/
+```bash
+   cd ./WebServiceCalculation
+```
 4. Запуск ПО
+```bash
    go run ./cmd/main.go
+```
 5. В случае необходимости можно сменить порт, на котором работает приложение. Это реализовано через переменную окружения PORT.
-   export PORT=80 (для Linux)
+Пример (для Linux):
+```bash  
+export PORT=80 
 ```
 ## Работа с ПО
 ### У сервиса 1 endpoint с url-ом /api/v1/calculate. Пользователь отправляет на этот url POST-запрос:
-   ```bash
+```bash
    curl --location 'localhost:8080/api/v1/calculate' \
    --header 'Content-Type: application/json' \
    --data '{"expression": "1+1"}'
-   ```
+```
 
 ### Разрешённые символы
 - Знаки операций (только бинарные): `+`, `-`, `*`, `/`
