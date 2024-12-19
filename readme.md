@@ -75,3 +75,5 @@ curl --location 'localhost:8080/api/v1/' \
 --header 'Content-Type: application/json' \
 --data '{"expression": "1+1"}'
 ```
+## Тестирование с помощью Postman
+    В директории postmanTests внутри проекта находится файл для импорта конфига в Postman. 
