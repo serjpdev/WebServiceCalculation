@@ -3,7 +3,7 @@ package application
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/poserj/calc_project/pkg/calculation"
+	"github.com/serjpdev/WebServiceCalculation/pkg/calculation"
 	"io"
 	"log/slog"
 	"net/http"

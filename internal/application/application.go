@@ -1,7 +1,7 @@
 package application
 
 import (
-	"github.com/poserj/calc_project/internal/application/logsystem"
+	"github.com/serjpdev/WebServiceCalculation/internal/application/logsystem"
 	"net/http"
 	"os"
 )

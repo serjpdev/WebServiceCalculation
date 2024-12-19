@@ -2,7 +2,7 @@ package application_test
 
 import (
 	"bytes"
-	"github.com/poserj/calc_project/internal/application"
+	"github.com/serjpdev/WebServiceCalculation/internal/application"
 	"net/http"
 	"net/http/httptest"
 	"strings"

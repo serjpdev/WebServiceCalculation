@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/poserj/calc_project/internal/application"
+	"github.com/serjpdev/WebServiceCalculation/internal/application"
 )
 
 func main() {

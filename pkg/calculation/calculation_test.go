@@ -1,7 +1,7 @@
 package calculation_test
 
 import (
-	"github.com/poserj/calc_project/pkg/calculation"
+	"github.com/serjpdev/WebServiceCalculation/pkg/calculation"
 	"testing"
 )
 
