@@ -7,7 +7,7 @@
 ```bash
 1. Установить GO 1.23
 2. Клонирование репозитория:
-   git clone github
+   git clone https://github.com/serjpdev/WebServiceCalculation.git
 2. Переход в директорию проекта
    cd ./calc_project/
 3. Запуск ПО
