@@ -2,6 +2,7 @@ package application
 
 import (
 	"github.com/serjpdev/WebServiceCalculation/internal/application/logsystem"
+	"log/slog"
 	"net/http"
 	"os"
 )
@@ -31,7 +32,7 @@ func New() *Application {
 }
 
 func (a *Application) RunServer() error {
-
+	slog.Info("Start webserver on " + a.config.Addr)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/v1/calculate", logsystem.LogRequestfunc(CalcHandler))
