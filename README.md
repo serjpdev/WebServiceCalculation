@@ -18,11 +18,12 @@
 ```bash
    go run ./cmd/main.go
 ```
-5. В случае необходимости можно сменить порт, на котором работает приложение. Это реализовано через переменную окружения PORT.
+5. В случае необходимости можно сменить порт, на котором работает приложение. Это реализовано через переменную окружения PORT. 
 Пример (для Linux):
 ```bash  
 export PORT=80 
-```
+``` 
+После этого запустить приложение (пункт 4).
 ## Работа с ПО
 ### У сервиса 1 endpoint с url-ом /api/v1/calculate. Пользователь отправляет на этот url POST-запрос:
 ```bash
@@ -61,7 +62,7 @@ curl --location 'localhost:8080/api/v1/calculate' \
    --header 'Content-Type: application/json' \
    --data '{
    "expression": "2+2*2"
-   }
+   }'
 ```
 2. Отправка невалидных данных:
 ```bash
@@ -69,7 +70,7 @@ curl --location 'localhost:8080/api/v1/calculate' \
    --header 'Content-Type: application/json' \
    --data '{
    "expression": "2+2*2)"
-   }
+   }'
 ```
 3. Отправка невалидного метода HTTP:
 ```bash
