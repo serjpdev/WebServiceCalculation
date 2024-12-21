@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b2d75871-de8e-40c4-8596-4dcf73ba6d57",
+		"_postman_id": "df005834-2020-4e65-925a-fcdc7e39ee78",
 		"name": "Manual test calculation API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "39682142"
@@ -36,7 +36,7 @@
 			"response": []
 		},
 		{
-			"name": "valid req",
+			"name": "Valid req",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -65,7 +65,7 @@
 			"response": []
 		},
 		{
-			"name": "not valid req GET",
+			"name": "Not valid req GET",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -97,7 +97,7 @@
 			"response": []
 		},
 		{
-			"name": "no route req",
+			"name": "No route req POST",
 			"request": {
 				"method": "POST",
 				"header": [],
